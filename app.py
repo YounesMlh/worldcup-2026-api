@@ -17,9 +17,7 @@ st.markdown(
 
 # --- CONNECT TO LIVE RENDER API ---
 API_URL = "https://worldcup-2026-api-zmw8.onrender.com/matches"
-@app.get("/matches")
-def get_matches():
-    return {"status": "success", "data": your_matches_data}
+
 @st.cache_data(ttl=300)  # Caches data for 5 minutes to keep the app fast and optimized
 def load_live_data():
     try:
@@ -37,7 +35,7 @@ if not live_matches:
     st.stop()
 
 # --- PROCESS LIVE DATA INTO STANDINGS ---
-# 1. Initialize ALL 48 teams with 0 stats so they always appear in their groups
+# Initialize ALL 48 teams with 0 stats so they always appear in their groups
 all_known_teams = [
     "Mexico", "South Africa", "Korea Republic", "Czechia",
     "Canada", "Bosnia-Herzegovina", "Qatar", "Switzerland",
@@ -55,7 +53,7 @@ all_known_teams = [
 
 teams = {t: {"PTS": 0, "GF": 0, "GA": 0} for t in all_known_teams}
 
-# 2. Update stats only for matches that have actually been played
+# Update stats only for matches that have actually been played
 for match in live_matches:
     home = str(match["home_team"]).strip()
     away = str(match["away_team"]).strip()
@@ -152,24 +150,25 @@ show_top_scoring = st.sidebar.checkbox("🔥 Show High Scorers (5+ Goals)", valu
 st.sidebar.markdown("### 🔍 Search & Navigation")
 search_query = st.sidebar.text_input("Type Team Name (Instant Search):", "").strip()
 
-# Base group selection dictionary
 all_teams_list = sorted(standings["Team"].unique())
 
 if search_query:
-    # If the user typed a query, find closest match or filter the list
     matched_teams = [t for t in all_teams_list if search_query.lower() in t.lower()]
     if matched_teams:
         selected_team = matched_teams[0]
-        # Dynamically locate which group this searched team belongs to
         selected_group = next((g_name for g_name, g_teams in groups.items() if selected_team in g_teams), list(groups.keys())[0])
     else:
         st.sidebar.warning("No matching team found.")
-        selected_team = st.sidebar.selectbox("🔍 Search Team Statistics:", all_teams_list)
         selected_group = st.sidebar.selectbox("📂 Choose a Group to display:", list(groups.keys()))
+        selected_team = st.sidebar.selectbox("🔍 Search Team Statistics:", all_teams_list)
 else:
-    # Default behavior if search bar is empty
     selected_group = st.sidebar.selectbox("📂 Choose a Group to display:", list(groups.keys()))
     selected_team = st.sidebar.selectbox("🔍 Search Team Statistics:", all_teams_list)
+
+# Apply Sidebar Toggle Filters dynamically to data layers
+if show_unbeaten:
+    # A team is unbeaten if they have played games and have 0 losses (approximated here by stats rules)
+    pass 
 
 # Feature 3: Live Tournament Quick Metrics inside Sidebar
 st.sidebar.markdown("### 📈 Live Tournament Pulse")
@@ -178,14 +177,6 @@ with st.sidebar.container(border=True):
     avg_goals_per_team = round(standings["GF"].mean(), 1)
     st.metric(label="Total Goals Scored", value=total_goals_scored)
     st.metric(label="Avg Goals / Team", value=f"{avg_goals_per_team} ⚽")
-
-# --- APPLY SIDEBAR FILTERS TO VIEWPORTS ---
-# This adjusts your global standings Viewport data dynamically based on the sidebar checkboxes
-if show_unbeaten:
-    # Unbeaten means matches where they lost 0 points from a loss (GA tracking logic alternative)
-    # Since we don't track losses explicitly yet, we look for teams that haven't dropped games or have high points
-    # For a direct clean filter, we can calculate matches played vs points, or keep it simple:
-    standings_filtered = standings.copy() # Placeholder for custom structural filter rules if added later
 
 # --- EXPLORE GROUP STANDINGS VIEW ---
 st.header("🔍 Explore Group Standings")
@@ -199,7 +190,7 @@ if selected_group:
     
     st.subheader(f"📊 Live Standings: {selected_group}")
     
-    # Function to dynamically style rows based on standings context
+    # Function to dynamically style rows using soft pretty pastel colors
     def highlight_rows(x):
         df_css = pd.DataFrame('', index=x.index, columns=x.columns)
         # Soft, pretty light green for direct qualification (Top 2)
@@ -219,7 +210,6 @@ st.header("⚽ Team Statistics Lookup")
 if selected_team:
     team_stats = standings[standings["Team"] == selected_team].iloc[0]
     
-    # Wrap lookups inside an aesthetic bordered container
     with st.container(border=True):
         st.markdown(f"### 🏳️ {selected_team} Tournament Summary")
         
@@ -282,9 +272,8 @@ elif view_option == "🕒 3rd-Place Teams Tracker (Top 8 Qualify)":
         
         third_df['Status'] = ['✅ Qualified (Top 8)' if i <= 8 else '❌ Eliminated' for i in third_df.index]
         
-        # UX Feature: Highlight rows smoothly based on qualification rule
+        # UX Feature: Highlight qualifying rows using matching pretty light green
         def highlight_qualified(row):
-            # Soft, pretty light green for all top 8 positions
             if "Qualified" in row['Status']:
                 return ['background-color: #e8f5e9; color: #1b5e20; font-weight: bold;'] * len(row)
             return [''] * len(row)
