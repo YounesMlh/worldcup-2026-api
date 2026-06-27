@@ -16,7 +16,7 @@ st.markdown(
 )
 
 # --- CONNECT TO LIVE RENDER API ---
-API_URL = "https://worldcup-2026-api-zmw8.onrender.com/matches"
+API_URL = "https://worldcup-2026-api-nxad.onrender.com/matches"
 
 @st.cache_data(ttl=300)  # Caches data for 5 minutes to keep the app fast and optimized
 def load_live_data():
