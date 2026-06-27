@@ -8,7 +8,7 @@ st.markdown("Welcome to your interactive World Cup standings dashboard! This app
 
 # --- CONNECT TO YOUR LIVE RENDER API ---
 # Replace this string with your exact live Render URL
-API_URL = "https://worldcup-2026-api-zmw8.onrender.com/matches"
+API_URL = "https://worldcup-2026-api-etd2.onrender.com/matches"
 
 @st.cache_data(ttl=300)  # Caches the data for 5 minutes to keep the app fast
 def load_live_data():
