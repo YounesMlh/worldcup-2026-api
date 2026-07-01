@@ -52,7 +52,7 @@ global_data = get_global_scoreboard()
 # --- DEEP 50 HISTORIC WORLD CUP QUESTIONS DATABASE ---
 QUIZ_POOL = [
     {"q": "Which country won the first ever World Cup in 1930?", "o": ["Argentina", "Uruguay", "Brazil", "Italy"], "a": "Uruguay"},
-    {"q": "Who is the all-time top goalscorer in World Cup history?", "o": ["Miroslav Klose", "Ronaldo", "Pelé", "Messi"], "a": "Miroslav Klose"},
+    {"q": "Who is the all-time top goalscorer in World Cup history?", "o": ["Miroslav Klose", "Ronaldo", "Pelé", "Messi"], "a": "Messi"},
     {"q": "Which nation has won the most World Cup titles?", "o": ["Germany", "Italy", "Argentina", "Brazil"], "a": "Brazil"},
     {"q": "Which player holds the record for most World Cup match appearances?", "o": ["Lothar Matthäus", "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona"], "a": "Lionel Messi"},
     {"q": "Who scored the famous 'Hand of God' goal in 1986?", "o": ["Pelé", "Diego Maradona", "Zinedine Zidane", "Romário"], "a": "Diego Maradona"},
