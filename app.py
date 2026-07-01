@@ -1,8 +1,10 @@
+import os
+import random
 import streamlit as st
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-import random
+from supabase import create_client, Client
 
 # --- ADVANCED PLATFORM CONFIGURATION ---
 st.set_page_config(
@@ -38,21 +40,45 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# --- GLOBAL CROSS-USER LEADERBOARD CACHE ---
+# --- ☁️ CLOUD DATABASE RECONCILIATION LAYER ---
 @st.cache_resource
-def get_global_scoreboard():
-    return {
-        "Names": ["Zidane"],
-        "Scores": [11]
-    }
+def get_supabase_client() -> Client:
+    """Connects seamlessly to your cloud backend storage pool."""
+    url = st.secrets.get("SUPABASE_URL") or os.environ.get("SUPABASE_URL")
+    key = st.secrets.get("SUPABASE_KEY") or os.environ.get("SUPABASE_KEY")
+    return create_client(url, key)
 
-global_data = get_global_scoreboard()
+supabase = get_supabase_client()
+
+def load_cloud_data():
+    """Fetches real-time score lists directly out of the database cluster row."""
+    try:
+        response = supabase.table("tournament_store").select("match_data").eq("id", "wc_2026").execute()
+        if response.data and response.data[0]["match_data"]:
+            db_dict = response.data[0]["match_data"]
+            # Enforce data format normalization if it returns empty or missing structural lists
+            if "Names" not in db_dict or "Scores" not in db_dict:
+                return {"Names": ["Zidane"], "Scores": [11]}
+            return db_dict
+    except Exception as e:
+        st.error(f"Database Initialization Read Failure: {e}")
+    return {"Names": ["Zidane"], "Scores": [11]} # Production failover fallback
+
+def save_cloud_data(updated_dict):
+    """Overwrites cloud database row with latest updated global standings dictionary."""
+    try:
+        supabase.table("tournament_store").update({"match_data": updated_dict}).eq("id", "wc_2026").execute()
+    except Exception as e:
+        st.error(f"Database Synchronous Write Error: {e}")
+
+# Fetch our global database state matrix live on build refresh cycles
+global_data = load_cloud_data()
 
 
 # --- DEEP 50 HISTORIC WORLD CUP QUESTIONS DATABASE ---
 QUIZ_POOL = [
     {"q": "Which country won the first ever World Cup in 1930?", "o": ["Argentina", "Uruguay", "Brazil", "Italy"], "a": "Uruguay"},
-    {"q": "Who is the all-time top goalscorer in World Cup history?", "o": ["Miroslav Klose", "Ronaldo", "Pelé", "Messi"], "a": "Messi"},
+    {"q": "Who is the all-time top goalscorer in World Cup history?", "o": ["Miroslav Klose", "Ronaldo", "Pelé", "Messi"], "a": "Miroslav Klose"},
     {"q": "Which nation has won the most World Cup titles?", "o": ["Germany", "Italy", "Argentina", "Brazil"], "a": "Brazil"},
     {"q": "Which player holds the record for most World Cup match appearances?", "o": ["Lothar Matthäus", "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona"], "a": "Lionel Messi"},
     {"q": "Who scored the famous 'Hand of God' goal in 1986?", "o": ["Pelé", "Diego Maradona", "Zinedine Zidane", "Romário"], "a": "Diego Maradona"},
@@ -156,9 +182,12 @@ else:
                 if st.session_state.quiz_user_answers[i] == item['a']:
                     final_score += 1
                     
-            # Update shared resource cache matrix dictionary
+            # Update shared resource cache matrix dictionary structure dynamically
             global_data["Names"].append(username.strip())
             global_data["Scores"].append(final_score)
+            
+            # Send updated local list straight out to our persistent Supabase Cloud table!
+            save_cloud_data(global_data)
             
             # Record current status performance string before closing form view context
             st.session_state.last_score_announcement = f"🎉 Sequence Evaluation Complete! {username} earned score entry: **{final_score}/15**."
@@ -166,6 +195,7 @@ else:
             # Collapse app states directly back down onto the initial state logic view tree
             st.session_state.quiz_submitted = True
             st.session_state.quiz_active = False
+            st.clear_cache() # Clear cache to force a fresh load from the database on rerun
             st.rerun()
 
 
@@ -397,7 +427,6 @@ def render_professional_card(match_id, data):
     is_scheduled = data["status"] == "Scheduled"
     badge_color = "#6c757d" if is_scheduled else "#0d6efd"
     
-    # Force black color using !important in the inline styles below
     score_bg_color = "#e2e8f0"   # Light grey box background
     score_text_color = "#000000" # Pure Black
     
