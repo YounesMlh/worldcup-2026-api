@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
 import random
+from bs4 import BeautifulSoup
 
 # --- GLOBAL CROSS-USER LEADERBOARD CACHE ---
 # This dictionary is shared among ALL connected clients on Render
@@ -31,7 +30,6 @@ QUIZ_POOL = [
 
 # --- SESSION STATE INITIALIZATION ---
 if "quiz_questions" not in st.session_state:
-    # Shuffle and pick a random 10-question set
     random.seed() 
     st.session_state.quiz_questions = random.sample(QUIZ_POOL, 10)
     st.session_state.quiz_user_answers = {}
@@ -53,15 +51,14 @@ with st.form("quiz_form"):
         )
         st.write("---")
         
-    username = st.text_input("👤 Enter your name for the global leaderboard:", maxLength=20)
+    username = st.text_input("👤 Enter your name for the global leaderboard:", max_chars=20)
     submit_quiz = st.form_submit_button("Submit Answers & Check Classification")
 
-# Logic Evaluation
+# Logic Evaluation (Correctly outside the with block)
 if submit_quiz:
     if not username.strip():
         st.error("Please enter a valid nickname to record your score!")
     else:
-        # Calculate scores
         final_score = 0
         for i, item in enumerate(st.session_state.quiz_questions):
             if st.session_state.quiz_user_answers[i] == item['a']:
@@ -74,6 +71,28 @@ if submit_quiz:
         global_data["Scores"].append(final_score)
         
         st.success(f"🎉 Quiz complete, {username}! You scored **{final_score}/10**.")
+
+# --- LEADERBOARD DISPLAY BLOCK ---
+st.subheader("📊 Global Trivia Classification Leaderboard")
+st.markdown("_Updates live instantly for all active connections worldwide._")
+
+# Build dataframe from shared memory resource, sort it, and display
+leaderboard_df = pd.DataFrame(global_data).sort_values(by="Scores", ascending=False).reset_index(drop=True)
+leaderboard_df.index += 1 # 1-based rank indexing
+
+st.dataframe(
+    leaderboard_df.rename(columns={"Names": "COMPETITOR", "Scores": "CORRECT ANSWERS"}),
+    use_container_width=True
+)
+
+st.write("---")
+st.markdown("## ⚽ Proceed to 2026 Tournament Operations Matrix")
+
+# =====================================================================
+# YOUR ORIGINAL TOURNAMENT DASHBOARD CODE STARTS BELOW HERE
+# =====================================================================
+st.write("Welcome to the 2026 World Cup Bracket & Standings Dashboard!")
+# (Keep any other elements/tabs from your older app setup right here)
 
 # --- LEADERBOARD DISPLAY BLOCK ---
 st.subheader("📊 Global Trivia Classification Leaderboard")
