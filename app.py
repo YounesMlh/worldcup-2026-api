@@ -42,8 +42,8 @@ st.markdown("""
 @st.cache_resource
 def get_global_scoreboard():
     return {
-        "Names": ["Zidane", "Pelé", "Maradona"],
-        "Scores": [14, 12, 11]
+        "Names": ["Zidane"],
+        "Scores": [11]
     }
 
 global_data = get_global_scoreboard()
