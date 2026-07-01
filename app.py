@@ -2,6 +2,95 @@ import streamlit as st
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+import random
+
+# --- GLOBAL CROSS-USER LEADERBOARD CACHE ---
+# This dictionary is shared among ALL connected clients on Render
+@st.cache_resource
+def get_global_scoreboard():
+    return {
+        "Names": ["Zidane", "Pelé", "Maradona"],
+        "Scores": [9, 8, 7]
+    }
+
+global_data = get_global_scoreboard()
+
+# --- QUIZ DATABASE ---
+QUIZ_POOL = [
+    {"q": "Which country won the first ever World Cup in 1930?", "o": ["Argentina", "Uruguay", "Brazil", "Italy"], "a": "Uruguay"},
+    {"q": "Who is the all-time top goalscorer in World Cup history?", "o": ["Miroslav Klose", "Ronaldo", "Pelé", "Messi"], "a": "Miroslav Klose"},
+    {"q": "Which nation has won the most World Cup titles?", "o": ["Germany", "Italy", "Argentina", "Brazil"], "a": "Brazil"},
+    {"q": "Which player holds the record for most World Cup match appearances?", "o": ["Lothar Matthäus", "Lionel Messi", "Cristiano Ronaldo", "Diego Maradona"], "a": "Lionel Messi"},
+    {"q": "Who scored the famous 'Hand of God' goal in 1986?", "o": ["Pelé", "Diego Maradona", "Zinedine Zidane", "Romário"], "a": "Diego Maradona"},
+    {"q": "Which country hosted the 2010 FIFA World Cup?", "o": ["Brazil", "South Africa", "Germany", "Japan"], "a": "South Africa"},
+    {"q": "Who won the Best Young Player award at the 2018 World Cup?", "o": ["Kylian Mbappé", "Luka Modrić", "Neymar", "Paul Pogba"], "a": "Kylian Mbappé"},
+    {"q": "Which country is the reigning World Cup Champion from 2022?", "o": ["France", "Croatia", "Argentina", "Morocco"], "a": "Argentina"},
+    {"q": "What unique feat did Zinedine Zidane achieve in the 2006 Final?", "o": ["Scored a hat-trick", "Got a red card", "Saved a penalty", "Scored an own goal"], "a": "Got a red card"},
+    {"q": "How many teams will compete in the expanded 2026 World Cup?", "o": ["32", "40", "48", "64"], "a": "48"}
+]
+
+# --- SESSION STATE INITIALIZATION ---
+if "quiz_questions" not in st.session_state:
+    # Shuffle and pick a random 10-question set
+    random.seed() 
+    st.session_state.quiz_questions = random.sample(QUIZ_POOL, 10)
+    st.session_state.quiz_user_answers = {}
+    st.session_state.quiz_submitted = False
+
+# --- RENDERING THE QUIZ SECTION ---
+st.title("🏆 All-Time World Cup Trivia Quiz")
+st.markdown("Test your historic football knowledge before viewing the 2026 data arrays! Answer all 10 questions to enter the leaderboard.")
+
+# Quiz Layout Form
+with st.form("quiz_form"):
+    for i, item in enumerate(st.session_state.quiz_questions):
+        st.markdown(f"**Q{i+1}: {item['q']}**")
+        st.session_state.quiz_user_answers[i] = st.radio(
+            f"Select option for Q{i+1}", 
+            options=item['o'], 
+            key=f"q_radio_{i}",
+            label_visibility="collapsed"
+        )
+        st.write("---")
+        
+    username = st.text_input("👤 Enter your name for the global leaderboard:", maxLength=20)
+    submit_quiz = st.form_submit_button("Submit Answers & Check Classification")
+
+# Logic Evaluation
+if submit_quiz:
+    if not username.strip():
+        st.error("Please enter a valid nickname to record your score!")
+    else:
+        # Calculate scores
+        final_score = 0
+        for i, item in enumerate(st.session_state.quiz_questions):
+            if st.session_state.quiz_user_answers[i] == item['a']:
+                final_score += 1
+                
+        st.session_state.quiz_submitted = True
+        
+        # Inject results directly into the shared resource lists
+        global_data["Names"].append(username.strip())
+        global_data["Scores"].append(final_score)
+        
+        st.success(f"🎉 Quiz complete, {username}! You scored **{final_score}/10**.")
+
+# --- LEADERBOARD DISPLAY BLOCK ---
+st.subheader("📊 Global Trivia Classification Leaderboard")
+st.markdown("_Updates live instantly for all active connections worldwide._")
+
+# Build data frame from shared memory resource, sort it, and display
+leaderboard_df = pd.DataFrame(global_data).sort_values(by="Scores", ascending=False).reset_index(drop=True)
+leaderboard_df.index += 1 # 1-based rank indexing
+
+st.dataframe(
+    leaderboard_df.rename(columns={"Names": "COMPETITOR", "Scores": "CORRECT ANSWERS"}),
+    use_container_width=True
+)
+
+st.write("---")
+st.markdown("## ⚽ Proceed to 2026 Tournament Operations Matrix")
+# --- Rest of your original tournament dashboard code continues below here ---
 
 # --- ADVANCED PLATFORM CONFIGURATION ---
 st.set_page_config(
