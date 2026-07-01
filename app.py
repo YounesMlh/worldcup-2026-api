@@ -43,9 +43,25 @@ st.markdown("""
 # --- ☁️ CLOUD DATABASE RECONCILIATION LAYER ---
 @st.cache_resource
 def get_supabase_client() -> Client:
-    """Connects seamlessly to your cloud backend storage pool."""
-    url = st.secrets.get("SUPABASE_URL") or os.environ.get("SUPABASE_URL")
-    key = st.secrets.get("SUPABASE_KEY") or os.environ.get("SUPABASE_KEY")
+    """Connects seamlessly to your cloud backend storage pool safely."""
+    # 1. Try pulling from Render Environment Variables first to avoid crashes
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_KEY")
+    
+    # 2. If not found in environment variables, check local st.secrets fallback
+    if not url or not key:
+        try:
+            url = st.secrets.get("SUPABASE_URL")
+            key = st.secrets.get("SUPABASE_KEY")
+        except Exception:
+            # Safe fallbacks if st.secrets completely errors out locally
+            url = None
+            key = None
+
+    if not url or not key:
+        st.error("🚨 Missing Database Credentials! Please check Render Environment Variables or local secrets.toml.")
+        st.stop()
+        
     return create_client(url, key)
 
 supabase = get_supabase_client()
