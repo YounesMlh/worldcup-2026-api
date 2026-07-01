@@ -17,6 +17,23 @@ st.markdown("""
     <style>
     .metric-card { background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
     .stTabs [data-baseweb="tab"] { font-weight: 600; font-size: 14px; }
+    
+    /* Big Full-Width Start Button custom styling override */
+    div.stButton > button.element-container-compiled-start {
+        background-color: #2563eb;
+        color: white;
+        font-size: 26px !important;
+        font-weight: bold;
+        padding: 25px 0px;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.2s ease-in-out;
+    }
+    div.stButton > button.element-container-compiled-start:hover {
+        background-color: #1d4ed8;
+        transform: scale(1.01);
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -89,27 +106,31 @@ QUIZ_POOL = [
 
 # --- ENGINE FLAGS & SESSION STATE ARCHITECTURE ---
 if "quiz_questions" not in st.session_state:
-    random.seed() 
-    # Extract exactly 15 dynamic questions from the 50 database pool entries
     st.session_state.quiz_questions = random.sample(QUIZ_POOL, 15)
     st.session_state.quiz_user_answers = {}
     st.session_state.quiz_active = False
     st.session_state.quiz_submitted = False
+    st.session_state.last_score_announcement = ""
 
 
 # --- COMPACT RENDERING LOGIC HUB ---
 st.markdown("### 🏆 Arena Trivia Challenge Matrix")
 
-# Show the clean 'Start' interface if the user hasn't clicked it or submitted yet
-if not st.session_state.quiz_active and not st.session_state.quiz_submitted:
-    with st.expander("🚀 Click here to unlock the Historic 15-Question Trivia Challenge", expanded=True):
-        st.markdown("_Test your core football expertise before looking at the 2026 operation arrays._")
-        if st.button("Start Quiz Arena"):
-            st.session_state.quiz_active = True
-            st.rerun()
+# --- VIEW 1: COLLAPSED BIG BUTTON VIEW ---
+if not st.session_state.quiz_active:
+    if st.session_state.last_score_announcement:
+        st.success(st.session_state.last_score_announcement)
 
-# When active (and not yet submitted), show all 15 questions
-if st.session_state.quiz_active and not st.session_state.quiz_submitted:
+    # Big full-width button to initialize the quiz frame
+    if st.button("🚀 START 15-QUESTION TRIVIA ARENA", use_container_width=True, key="start_btn_compiled"):
+        st.session_state.quiz_questions = random.sample(QUIZ_POOL, 15)
+        st.session_state.quiz_user_answers = {}
+        st.session_state.quiz_active = True
+        st.session_state.quiz_submitted = False
+        st.rerun()
+
+# --- VIEW 2: EXPANDED ACTIVE QUESTION VIEW ---
+else:
     with st.form("quiz_form"):
         st.info("⏱️ Complete all 15 inputs to register your nickname ranking below!")
         
@@ -124,7 +145,7 @@ if st.session_state.quiz_active and not st.session_state.quiz_submitted:
             st.write("---")
             
         username = st.text_input("👤 Leaderboard Nickname Key:", max_chars=20)
-        submit_quiz = st.form_submit_button("Submit & Lock Analytics Classification")
+        submit_quiz = st.form_submit_button("Submit & Lock Analytics Classification", use_container_width=True)
 
     if submit_quiz:
         if not username.strip():
@@ -135,20 +156,20 @@ if st.session_state.quiz_active and not st.session_state.quiz_submitted:
                 if st.session_state.quiz_user_answers[i] == item['a']:
                     final_score += 1
                     
-            # Update system lifecycle flags
-            st.session_state.quiz_submitted = True
-            st.session_state.quiz_active = False
-            
-            # Inject score results directly to shared resource matrix dictionary
+            # Update shared resource cache matrix dictionary
             global_data["Names"].append(username.strip())
             global_data["Scores"].append(final_score)
             
-            st.success(f"🎉 Sequence Evaluation Complete! {username} earned score entry: **{final_score}/15**.")
+            # Record current status performance string before closing form view context
+            st.session_state.last_score_announcement = f"🎉 Sequence Evaluation Complete! {username} earned score entry: **{final_score}/15**."
+            
+            # Collapse app states directly back down onto the initial state logic view tree
+            st.session_state.quiz_submitted = True
+            st.session_state.quiz_active = False
             st.rerun()
 
 
 # --- ALWAYS ACCESSIBLE DYNAMIC SCOREBOARD BLOCK ---
-# This remains visible, closing the form layout upon execution submission as requested
 if st.session_state.quiz_submitted or not st.session_state.quiz_active:
     st.subheader("📊 Global Trivia Classification Leaderboard")
     st.markdown("_Live global cache updating simultaneously on connection streams across Render cluster endpoints._")
@@ -160,15 +181,6 @@ if st.session_state.quiz_submitted or not st.session_state.quiz_active:
         leaderboard_df.rename(columns={"Names": "COMPETITOR", "Scores": "CORRECT ANSWERS (OUT OF 15)"}),
         use_container_width=True
     )
-    
-    # Optional reset mechanism shortcut 
-    if st.session_state.quiz_submitted:
-        if st.button("🔄 Try Again With New Questions"):
-            st.session_state.quiz_questions = random.sample(QUIZ_POOL, 15)
-            st.session_state.quiz_user_answers = {}
-            st.session_state.quiz_submitted = False
-            st.session_state.quiz_active = False
-            st.rerun()
 
 st.write("---")
 st.markdown("## ⚽ Proceed to 2026 Tournament Operations Matrix")
