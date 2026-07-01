@@ -397,9 +397,9 @@ def render_professional_card(match_id, data):
     is_scheduled = data["status"] == "Scheduled"
     badge_color = "#6c757d" if is_scheduled else "#0d6efd"
     
-    # --- CUSTOM SCORE COLOR CONFIGURATION ---
-    score_bg_color = "#e2e8f0"   # Light grey background container
-    score_text_color = "#000000" # Solid black text for optimal readability
+    # Force black color using !important in the inline styles below
+    score_bg_color = "#e2e8f0"   # Light grey box background
+    score_text_color = "#000000" # Pure Black
     
     st.markdown(f"""
     <div style="background-color: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -411,7 +411,7 @@ def render_professional_card(match_id, data):
             <span style="font-size: 14px; font-weight: { '700; color: #1e293b;' if data['winner'] == data['t1'] else '500; color: #64748b;' }">
                 🥇 {normalize_string(data['t1'])}
             </span>
-            <span style="font-size: 16px; font-family: monospace; font-weight: 700; background-color: {score_bg_color}; color: {score_text_color}; padding: 2px 8px; border-radius: 4px;">
+            <span style="font-size: 16px; font-family: monospace; font-weight: 700; background-color: {score_bg_color}; color: {score_text_color} !important; padding: 2px 8px; border-radius: 4px;">
                 { '-' if is_scheduled else data['s1'] }
             </span>
         </div>
@@ -419,7 +419,7 @@ def render_professional_card(match_id, data):
             <span style="font-size: 14px; font-weight: { '700; color: #1e293b;' if data['winner'] == data['t2'] else '500; color: #64748b;' }">
                 🥇 {normalize_string(data['t2'])}
             </span>
-            <span style="font-size: 16px; font-family: monospace; font-weight: 700; background-color: {score_bg_color}; color: {score_text_color}; padding: 2px 8px; border-radius: 4px;">
+            <span style="font-size: 16px; font-family: monospace; font-weight: 700; background-color: {score_bg_color}; color: {score_text_color} !important; padding: 2px 8px; border-radius: 4px;">
                 { '-' if is_scheduled else data['s2'] }
             </span>
         </div>
