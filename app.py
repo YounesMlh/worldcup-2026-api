@@ -265,6 +265,25 @@ def fetch_live_group_stage_payload():
         return []
 
 live_matches = fetch_live_group_stage_payload()
+# Only use the first 72 completed group-stage matches
+# (48 teams × 3 matches ÷ 2 = 72 matches)
+
+completed_matches = []
+
+for match in live_matches:
+    score = str(match["score"])
+
+    if (
+        score
+        and "v" not in score.lower()
+        and "match" not in score.lower()
+    ):
+        completed_matches.append(match)
+
+    if len(completed_matches) == 72:
+        break
+
+live_matches = completed_matches
 
 
 # --- 2. STANDARDIZED DATA PROCESSING PIPELINE ---
