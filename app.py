@@ -1,7 +1,26 @@
 import streamlit as st
 import pandas as pd
-import random
+import requests
 from bs4 import BeautifulSoup
+import random
+
+# --- ADVANCED PLATFORM CONFIGURATION ---
+# CRITICAL FIX: This configuration command MUST execute before any other Streamlit component!
+st.set_page_config(
+    page_title="2026 FIFA World Cup Analytics Center", 
+    page_icon="🏆", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Custom Enterprise Styling Injection
+st.markdown("""
+    <style>
+    .metric-card { background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
+    .stTabs [data-baseweb="tab"] { font-weight: 600; font-size: 14px; }
+    </style>
+""", unsafe_allow_html=True)
+
 
 # --- GLOBAL CROSS-USER LEADERBOARD CACHE ---
 # This dictionary is shared among ALL connected clients on Render
@@ -13,6 +32,7 @@ def get_global_scoreboard():
     }
 
 global_data = get_global_scoreboard()
+
 
 # --- QUIZ DATABASE ---
 QUIZ_POOL = [
@@ -28,12 +48,14 @@ QUIZ_POOL = [
     {"q": "How many teams will compete in the expanded 2026 World Cup?", "o": ["32", "40", "48", "64"], "a": "48"}
 ]
 
+
 # --- SESSION STATE INITIALIZATION ---
 if "quiz_questions" not in st.session_state:
     random.seed() 
     st.session_state.quiz_questions = random.sample(QUIZ_POOL, 10)
     st.session_state.quiz_user_answers = {}
     st.session_state.quiz_submitted = False
+
 
 # --- RENDERING THE QUIZ SECTION ---
 st.title("🏆 All-Time World Cup Trivia Quiz")
@@ -51,10 +73,11 @@ with st.form("quiz_form"):
         )
         st.write("---")
         
+    # FIX: Replaced legacy maxLength parameter with valid max_chars parameter
     username = st.text_input("👤 Enter your name for the global leaderboard:", max_chars=20)
     submit_quiz = st.form_submit_button("Submit Answers & Check Classification")
 
-# Logic Evaluation (Correctly outside the with block)
+# Logic Evaluation
 if submit_quiz:
     if not username.strip():
         st.error("Please enter a valid nickname to record your score!")
@@ -66,19 +89,18 @@ if submit_quiz:
                 
         st.session_state.quiz_submitted = True
         
-        # Inject results directly into the shared resource lists
         global_data["Names"].append(username.strip())
         global_data["Scores"].append(final_score)
         
         st.success(f"🎉 Quiz complete, {username}! You scored **{final_score}/10**.")
 
+
 # --- LEADERBOARD DISPLAY BLOCK ---
 st.subheader("📊 Global Trivia Classification Leaderboard")
 st.markdown("_Updates live instantly for all active connections worldwide._")
 
-# Build dataframe from shared memory resource, sort it, and display
 leaderboard_df = pd.DataFrame(global_data).sort_values(by="Scores", ascending=False).reset_index(drop=True)
-leaderboard_df.index += 1 # 1-based rank indexing
+leaderboard_df.index += 1
 
 st.dataframe(
     leaderboard_df.rename(columns={"Names": "COMPETITOR", "Scores": "CORRECT ANSWERS"}),
@@ -88,52 +110,16 @@ st.dataframe(
 st.write("---")
 st.markdown("## ⚽ Proceed to 2026 Tournament Operations Matrix")
 
-# =====================================================================
-# YOUR ORIGINAL TOURNAMENT DASHBOARD CODE STARTS BELOW HERE
-# =====================================================================
-st.write("Welcome to the 2026 World Cup Bracket & Standings Dashboard!")
-# (Keep any other elements/tabs from your older app setup right here)
 
-# --- LEADERBOARD DISPLAY BLOCK ---
-st.subheader("📊 Global Trivia Classification Leaderboard")
-st.markdown("_Updates live instantly for all active connections worldwide._")
-
-# Build data frame from shared memory resource, sort it, and display
-leaderboard_df = pd.DataFrame(global_data).sort_values(by="Scores", ascending=False).reset_index(drop=True)
-leaderboard_df.index += 1 # 1-based rank indexing
-
-st.dataframe(
-    leaderboard_df.rename(columns={"Names": "COMPETITOR", "Scores": "CORRECT ANSWERS"}),
-    use_container_width=True
-)
-
-st.write("---")
-st.markdown("## ⚽ Proceed to 2026 Tournament Operations Matrix")
-# --- Rest of your original tournament dashboard code continues below here ---
-
-# --- ADVANCED PLATFORM CONFIGURATION ---
-st.set_page_config(
-    page_title="2026 FIFA World Cup Analytics Center", 
-    page_icon="🏆", 
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Custom Enterprise Styling Injection
-st.markdown("""
-    <style>
-    .metric-card { background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
-    .stTabs [data-baseweb="tab"] { font-weight: 600; font-size: 14px; }
-    </style>
-""", unsafe_allow_html=True)
-
+# --- CORE DASHBOARD SYSTEM CONTROLLER ---
 st.title("🏆 2026 FIFA World Cup Live Analytics Center")
 st.markdown("---")
+
 
 # --- 1. ROBUST CORE SCRAPER ENGINE ---
 WIKI_URL = "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"
 
-@st.cache_data(ttl=300) # Balanced cache matrix: 5 minutes to mitigate DDoS/IP blocking
+@st.cache_data(ttl=300)
 def fetch_live_group_stage_payload():
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -159,6 +145,7 @@ def fetch_live_group_stage_payload():
 
 live_matches = fetch_live_group_stage_payload()
 
+
 # --- 2. STANDARDIZED DATA PROCESSING PIPELINE ---
 all_known_teams = [
     "Mexico", "South Africa", "Korea Republic", "Czechia", "Canada", "Bosnia-Herzegovina", "Qatar", "Switzerland",
@@ -171,7 +158,6 @@ all_known_teams = [
 
 team_matrix = {t: {"W": 0, "D": 0, "L": 0, "GF": 0, "GA": 0, "PTS": 0} for t in all_known_teams}
 
-# Standardize localized Wikipedia formatting vectors to match strict database keys
 def normalize_string(team_name):
     aliases = {
         "South Korea": "Korea Republic", "Republic of Korea": "Korea Republic",
@@ -226,10 +212,12 @@ groups_registry = {
     "Group L": ["England", "Croatia","Ghana", "Panama"],
 }
 
+
 # --- 3. CONTROLS & SIDEBAR PANEL ---
 st.sidebar.header("🕹️ Enterprise Filter Hub")
 selected_group = st.sidebar.selectbox("📂 Select Structural Group:", list(groups_registry.keys()))
 selected_team = st.sidebar.selectbox("🔍 Isolate Team Profile:", sorted(standings_df["Team"].unique()))
+
 
 # --- 4. DATA PRESENTATION LAYER (GRID ARCHITECTURE) ---
 col_left_panel, col_right_panel = st.columns([1, 1], gap="large")
@@ -242,11 +230,9 @@ with col_left_panel:
         by=["PTS", "GD", "GF", "GA"], ascending=[False, False, False, False]
     ).reset_index(drop=True)
     
-    # Professional Pandas Formatting engine
     def inject_table_styles(val):
         styles_df = pd.DataFrame('', index=val.index, columns=val.columns)
         styles_df.iloc[0:2, :] = 'background-color: rgba(61, 141, 122, 0.6); color: #000000; font-weight: bold;'
-       
         return styles_df
 
     styled_view = filtered_group_df[["Team", "W", "D", "L", "PTS", "GD", "GF"]].style.apply(inject_table_styles, axis=None)
@@ -278,7 +264,6 @@ with col_right_panel:
     st.header("🎯 Isolated Performance Metrics")
     profile = standings_df[standings_df["Team"] == selected_team].iloc[0]
     
-    # Modernized UI Dashboard Metrics Panel
     st.markdown(f"#### 🏳️ {selected_team} Statistical Overview")
     m_col1, m_col2, m_col3 = st.columns(3)
     m_col1.metric("Tournament Points", f"{int(profile['PTS'])} PTS")
@@ -302,19 +287,17 @@ with col_right_panel:
 
 st.markdown("---")
 
+
 # --- PRODUCTION-GRADE READ-ONLY TOURNAMENT TREE SYSTEM ---
 st.header("🏁 Knockout Phase Structural Tree")
 st.markdown("Official tournament bracket mapping. Future stages initialize automatically as real matches conclude.")
 
-# Master Immutable Database State Mapping
 immutable_knockout_tree = {
-    # Finished Matches
     "M73": {"t1": "Germany", "t2": "Paraguay", "s1": 1, "s2": 1, "status": "FT (3-4 pen)", "date": "June 29", "winner": "Paraguay"},
     "M74": {"t1": "South Africa", "t2": "Canada", "s1": 0, "s2": 1, "status": "FT", "date": "June 28", "winner": "Canada"},
     "M75": {"t1": "Brazil", "t2": "Japan", "s1": 2, "s2": 1, "status": "FT", "date": "June 29", "winner": "Brazil"},
     "M78": {"t1": "Morocco", "t2": "Netherlands", "s1": 1, "s2": 1, "status": "FT (3-2 pen)", "date": "June 29", "winner": "Morocco"},
     
-    # Scheduled Matches
     "M76": {"t1": "Ivory Coast", "t2": "Norway", "s1": 0, "s2": 0, "status": "Scheduled", "date": "June 30", "winner": None},
     "M77": {"t1": "France", "t2": "Sweden", "s1": 0, "s2": 0, "status": "Scheduled", "date": "June 30", "winner": None},
     "M79": {"t1": "Mexico", "t2": "Ecuador", "s1": 0, "s2": 0, "status": "Scheduled", "date": "June 30", "winner": None},
@@ -333,12 +316,12 @@ structural_bracket_flow = ["M73", "M77", "M74", "M78", "M83", "M84", "M81", "M82
 
 tree_tabs = st.tabs(["Round of 32", "Round of 16", "Quarter-Finals", "Semi-Finals & Final"])
 
+
 # --- PROFESSIONAL CARD RENDERER COMPONENT ---
 def render_professional_card(match_id, data):
     is_scheduled = data["status"] == "Scheduled"
     badge_color = "#6c757d" if is_scheduled else "#0d6efd"
     
-    # Generate clean layout structure using raw HTML columns inside Streamlit's container
     st.markdown(f"""
     <div style="background-color: #ffffff; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
@@ -367,6 +350,7 @@ def render_professional_card(match_id, data):
     </div>
     """, unsafe_allow_html=True)
 
+
 # --- 1. ROUND OF 32 ---
 with tree_tabs[0]:
     st.subheader("Round of 32 Matches")
@@ -377,6 +361,7 @@ with tree_tabs[0]:
         active_column = b_left if count < 8 else b_right
         with active_column:
             render_professional_card(match_id, node)
+
 
 # --- 2. ROUND OF 16 ---
 with tree_tabs[1]:
@@ -403,6 +388,7 @@ with tree_tabs[1]:
             </div>
             """, unsafe_allow_html=True)
 
+
 # --- 3. QUARTER-FINALS ---
 with tree_tabs[2]:
     st.subheader("Quarter-Final Matches (8 Teams)")
@@ -422,6 +408,7 @@ with tree_tabs[2]:
                 <div style="font-size: 13px; font-weight: 600; color: #334155;">🛡️ Winner {left_r16} vs Winner {right_r16}</div>
             </div>
             """, unsafe_allow_html=True)
+
 
 # --- 4. SEMI-FINALS & FINAL ---
 with tree_tabs[3]:
