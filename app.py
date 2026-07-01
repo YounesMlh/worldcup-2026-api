@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 import random
 
 # --- ADVANCED PLATFORM CONFIGURATION ---
-# CRITICAL FIX: This configuration command MUST execute before any other Streamlit component!
 st.set_page_config(
     page_title="2026 FIFA World Cup Analytics Center", 
     page_icon="🏆", 
@@ -23,18 +22,17 @@ st.markdown("""
 
 
 # --- GLOBAL CROSS-USER LEADERBOARD CACHE ---
-# This dictionary is shared among ALL connected clients on Render
 @st.cache_resource
 def get_global_scoreboard():
     return {
         "Names": ["Zidane", "Pelé", "Maradona"],
-        "Scores": [9, 8, 7]
+        "Scores": [14, 12, 11]
     }
 
 global_data = get_global_scoreboard()
 
 
-# --- QUIZ DATABASE ---
+# --- DEEP 50 HISTORIC WORLD CUP QUESTIONS DATABASE ---
 QUIZ_POOL = [
     {"q": "Which country won the first ever World Cup in 1930?", "o": ["Argentina", "Uruguay", "Brazil", "Italy"], "a": "Uruguay"},
     {"q": "Who is the all-time top goalscorer in World Cup history?", "o": ["Miroslav Klose", "Ronaldo", "Pelé", "Messi"], "a": "Miroslav Klose"},
@@ -45,67 +43,132 @@ QUIZ_POOL = [
     {"q": "Who won the Best Young Player award at the 2018 World Cup?", "o": ["Kylian Mbappé", "Luka Modrić", "Neymar", "Paul Pogba"], "a": "Kylian Mbappé"},
     {"q": "Which country is the reigning World Cup Champion from 2022?", "o": ["France", "Croatia", "Argentina", "Morocco"], "a": "Argentina"},
     {"q": "What unique feat did Zinedine Zidane achieve in the 2006 Final?", "o": ["Scored a hat-trick", "Got a red card", "Saved a penalty", "Scored an own goal"], "a": "Got a red card"},
-    {"q": "How many teams will compete in the expanded 2026 World Cup?", "o": ["32", "40", "48", "64"], "a": "48"}
+    {"q": "How many teams will compete in the expanded 2026 World Cup?", "o": ["32", "40", "48", "64"], "a": "48"},
+    {"q": "Which country won its first World Cup title in 2010?", "o": ["Netherlands", "Spain", "Portugal", "England"], "a": "Spain"},
+    {"q": "Who was the captain of the 1970 World Cup-winning Brazil team?", "o": ["Carlos Alberto", "Pelé", "Garrincha", "Jairzinho"], "a": "Carlos Alberto"},
+    {"q": "Which team was infamously defeated 7-1 by Germany in 2014?", "o": ["Argentina", "Brazil", "France", "Portugal"], "a": "Brazil"},
+    {"q": "Who scored the winning goal for Germany in the 2014 Final?", "o": ["Thomas Müller", "Miroslav Klose", "Mario Götze", "Toni Kroos"], "a": "Mario Götze"},
+    {"q": "Which animal was the official mascot for the 2010 World Cup?", "o": ["Leopard (Zakumi)", "Armadillo (Fuleco)", "Lion (Goleo)", "Wolf (Zabivaka)"], "a": "Leopard (Zakumi)"},
+    {"q": "Which goalkeeper made the iconic triple save against Italy in 1970?", "o": ["Gordon Banks", "Lev Yashin", "Sepp Maier", "Dino Zoff"], "a": "Gordon Banks"},
+    {"q": "In which World Cup did Morocco become the first African nation to reach the semifinals?", "o": ["2010", "2014", "2018", "2022"], "a": "2022"},
+    {"q": "Who won the Golden Ball award at the 2014 World Cup despite losing the final?", "o": ["Thomas Müller", "Lionel Messi", "Arjen Robben", "James Rodríguez"], "a": "Lionel Messi"},
+    {"q": "Which nation played in three World Cup finals (1974, 1978, 2010) but never won?", "o": ["Sweden", "Hungary", "Netherlands", "Croatia"], "a": "Netherlands"},
+    {"q": "Who is the oldest goalscorer in FIFA World Cup history?", "o": ["Roger Milla", "Pelé", "Cristiano Ronaldo", "Zlatan Ibrahimović"], "a": "Roger Milla"},
+    {"q": "Which country won back-to-back World Cups in 1958 and 1962?", "o": ["Italy", "Germany", "Brazil", "Uruguay"], "a": "Brazil"},
+    {"q": "Which country hosted the World Cup in 1994?", "o": ["Italy", "United States", "France", "Japan"], "a": "United States"},
+    {"q": "Who scored the fastest goal in World Cup history (11 seconds)?", "o": ["Hakan Şükür", "Bryan Robson", "Clint Dempsey", "Ronaldo"], "a": "Hakan Şükür"},
+    {"q": "Which country was banned from the 1950 World Cup because of WWII?", "o": ["Germany", "Italy", "Argentina", "Uruguay"], "a": "Germany"},
+    {"q": "Who scored a hat-trick in the 1966 World Cup Final for England?", "o": ["Geoff Hurst", "Bobby Charlton", "Bobby Moore", "Gary Lineker"], "a": "Geoff Hurst"},
+    {"q": "Which country made its tournament debut at the 2018 World Cup?", "o": ["Iceland", "Togo", "Angola", "Slovakia"], "a": "Iceland"},
+    {"q": "Who is the only manager to win two consecutive World Cups?", "o": ["Vittorio Pozzo", "Mário Zagallo", "Franz Beckenbauer", "Didier Deschamps"], "a": "Vittorio Pozzo"},
+    {"q": "Which company has made every official World Cup match ball since 1970?", "o": ["Nike", "Adidas", "Puma", "Umbro"], "a": "Adidas"},
+    {"q": "What was the scoreline of the 2018 World Cup Final between France and Croatia?", "o": ["1-0", "2-1", "3-2", "4-2"], "a": "4-2"},
+    {"q": "Who was the breakout Colombian top scorer at the 2014 World Cup?", "o": ["Radamel Falcao", "James Rodríguez", "Juan Cuadrado", "Jackson Martínez"], "a": "James Rodríguez"},
+    {"q": "Which country lost the 1990 final to West Germany on a late penalty?", "o": ["Argentina", "Italy", "England", "Brazil"], "a": "Argentina"},
+    {"q": "Which host country failed to advance past the group stage first time in history?", "o": ["South Africa", "Qatar", "Japan", "USA"], "a": "South Africa"},
+    {"q": "Which goalkeeper won the Golden Glove at the 2022 World Cup?", "o": ["Hugo Lloris", "Emiliano Martínez", "Yassine Bounou", "Dominik Livaković"], "a": "Emiliano Martínez"},
+    {"q": "Who holds the record for most World Cup titles as a player?", "o": ["Pelé", "Maradona", "Ronaldo Nazário", "Cafu"], "a": "Pelé"},
+    {"q": "Which African nation did England narrowly defeat 3-2 in a 1990 thriller?", "o": ["Cameroon", "Nigeria", "Egypt", "Morocco"], "a": "Cameroon"},
+    {"q": "Which country won the World Cup hosted on home soil in 1998?", "o": ["Italy", "Germany", "France", "Brazil"], "a": "France"},
+    {"q": "Who was sent off for biting Giorgio Chiellini in 2014?", "o": ["Luis Suárez", "Neymar", "Zlatan Ibrahimović", "Diego Costa"], "a": "Luis Suárez"},
+    {"q": "Which European nation hosted the tournament in 2006?", "o": ["France", "Germany", "Italy", "Austria"], "a": "Germany"},
+    {"q": "Who did Zinedine Zidane headbutt during the 2006 World Cup Final?", "o": ["Marco Materazzi", "Fabio Cannavaro", "Gennaro Gattuso", "Gianluigi Buffon"], "a": "Marco Materazzi"},
+    {"q": "Which nation won the tournament in 1954 in a match known as the Miracle of Bern?", "o": ["West Germany", "Hungary", "Austria", "Uruguay"], "a": "West Germany"},
+    {"q": "What color card was introduced to the World Cup for the first time in 1970?", "o": ["Yellow & Red Cards", "Blue Cards", "Green Cards", "White Cards"], "a": "Yellow & Red Cards"},
+    {"q": "Who won the Golden Boot at the 2002 World Cup with 8 goals?", "o": ["Ronaldo Nazário", "Rivaldo", "Miroslav Klose", "Thierry Henry"], "a": "Ronaldo Nazário"},
+    {"q": "Which country qualified for its first ever World Cup in 2006?", "o": ["Angola", "Senegal", "Nigeria", "South Africa"], "a": "Angola"},
+    {"q": "Who missed the decisive penalty for Italy in the 1994 Final shootout?", "o": ["Roberto Baggio", "Franco Baresi", "Paolo Maldini", "Gianfranco Zola"], "a": "Roberto Baggio"},
+    {"q": "Which city hosted the final match of the 2022 World Cup in Qatar?", "o": ["Doha", "Lusail", "Al Rayyan", "Al Wakrah"], "a": "Lusail"},
+    {"q": "Which team was knocked out without conceding a single goal in 2006?", "o": ["Switzerland", "Italy", "France", "England"], "a": "Switzerland"},
+    {"q": "Who scored four goals in a single match during the 2018 World Cup?", "o": ["No one did", "Harry Kane", "Cristiano Ronaldo", "Kylian Mbappé"], "a": "No one did"},
+    {"q": "Which Asian country surprised the world by reaching the 2002 Semifinals?", "o": ["Japan", "South Korea", "Saudi Arabia", "China"], "a": "South Korea"},
+    {"q": "Who is the only player to score in two different World Cup finals for different countries?", "o": ["Robert Prosinečki", "Dejan Stanković", "Luis Monti", "Michel Platini"], "a": "Luis Monti"},
+    {"q": "Which nation will play host to the grand final match of the 2026 World Cup?", "o": ["United States", "Mexico", "Canada", "Morocco"], "a": "United States"}
 ]
 
 
-# --- SESSION STATE INITIALIZATION ---
+# --- ENGINE FLAGS & SESSION STATE ARCHITECTURE ---
 if "quiz_questions" not in st.session_state:
     random.seed() 
-    st.session_state.quiz_questions = random.sample(QUIZ_POOL, 10)
+    # Extract exactly 15 dynamic questions from the 50 database pool entries
+    st.session_state.quiz_questions = random.sample(QUIZ_POOL, 15)
     st.session_state.quiz_user_answers = {}
+    st.session_state.quiz_active = False
     st.session_state.quiz_submitted = False
 
 
-# --- RENDERING THE QUIZ SECTION ---
-st.title("🏆 All-Time World Cup Trivia Quiz")
-st.markdown("Test your historic football knowledge before viewing the 2026 data arrays! Answer all 10 questions to enter the leaderboard.")
+# --- COMPACT RENDERING LOGIC HUB ---
+st.markdown("### 🏆 Arena Trivia Challenge Matrix")
 
-# Quiz Layout Form
-with st.form("quiz_form"):
-    for i, item in enumerate(st.session_state.quiz_questions):
-        st.markdown(f"**Q{i+1}: {item['q']}**")
-        st.session_state.quiz_user_answers[i] = st.radio(
-            f"Select option for Q{i+1}", 
-            options=item['o'], 
-            key=f"q_radio_{i}",
-            label_visibility="collapsed"
-        )
-        st.write("---")
+# Show the clean 'Start' interface if the user hasn't clicked it or submitted yet
+if not st.session_state.quiz_active and not st.session_state.quiz_submitted:
+    with st.expander("🚀 Click here to unlock the Historic 15-Question Trivia Challenge", expanded=True):
+        st.markdown("_Test your core football expertise before looking at the 2026 operation arrays._")
+        if st.button("Start Quiz Arena"):
+            st.session_state.quiz_active = True
+            st.rerun()
+
+# When active (and not yet submitted), show all 15 questions
+if st.session_state.quiz_active and not st.session_state.quiz_submitted:
+    with st.form("quiz_form"):
+        st.info("⏱️ Complete all 15 inputs to register your nickname ranking below!")
         
-    # FIX: Replaced legacy maxLength parameter with valid max_chars parameter
-    username = st.text_input("👤 Enter your name for the global leaderboard:", max_chars=20)
-    submit_quiz = st.form_submit_button("Submit Answers & Check Classification")
-
-# Logic Evaluation
-if submit_quiz:
-    if not username.strip():
-        st.error("Please enter a valid nickname to record your score!")
-    else:
-        final_score = 0
         for i, item in enumerate(st.session_state.quiz_questions):
-            if st.session_state.quiz_user_answers[i] == item['a']:
-                final_score += 1
-                
-        st.session_state.quiz_submitted = True
-        
-        global_data["Names"].append(username.strip())
-        global_data["Scores"].append(final_score)
-        
-        st.success(f"🎉 Quiz complete, {username}! You scored **{final_score}/10**.")
+            st.markdown(f"**Q{i+1}: {item['q']}**")
+            st.session_state.quiz_user_answers[i] = st.radio(
+                f"Selection Options Matrix Q{i+1}", 
+                options=item['o'], 
+                key=f"q_radio_{i}",
+                label_visibility="collapsed"
+            )
+            st.write("---")
+            
+        username = st.text_input("👤 Leaderboard Nickname Key:", max_chars=20)
+        submit_quiz = st.form_submit_button("Submit & Lock Analytics Classification")
+
+    if submit_quiz:
+        if not username.strip():
+            st.error("Invalid entry string! A valid profile nickname is required to file performance tracking records.")
+        else:
+            final_score = 0
+            for i, item in enumerate(st.session_state.quiz_questions):
+                if st.session_state.quiz_user_answers[i] == item['a']:
+                    final_score += 1
+                    
+            # Update system lifecycle flags
+            st.session_state.quiz_submitted = True
+            st.session_state.quiz_active = False
+            
+            # Inject score results directly to shared resource matrix dictionary
+            global_data["Names"].append(username.strip())
+            global_data["Scores"].append(final_score)
+            
+            st.success(f"🎉 Sequence Evaluation Complete! {username} earned score entry: **{final_score}/15**.")
+            st.rerun()
 
 
-# --- LEADERBOARD DISPLAY BLOCK ---
-st.subheader("📊 Global Trivia Classification Leaderboard")
-st.markdown("_Updates live instantly for all active connections worldwide._")
+# --- ALWAYS ACCESSIBLE DYNAMIC SCOREBOARD BLOCK ---
+# This remains visible, closing the form layout upon execution submission as requested
+if st.session_state.quiz_submitted or not st.session_state.quiz_active:
+    st.subheader("📊 Global Trivia Classification Leaderboard")
+    st.markdown("_Live global cache updating simultaneously on connection streams across Render cluster endpoints._")
 
-leaderboard_df = pd.DataFrame(global_data).sort_values(by="Scores", ascending=False).reset_index(drop=True)
-leaderboard_df.index += 1
+    leaderboard_df = pd.DataFrame(global_data).sort_values(by="Scores", ascending=False).reset_index(drop=True)
+    leaderboard_df.index += 1
 
-st.dataframe(
-    leaderboard_df.rename(columns={"Names": "COMPETITOR", "Scores": "CORRECT ANSWERS"}),
-    use_container_width=True
-)
+    st.dataframe(
+        leaderboard_df.rename(columns={"Names": "COMPETITOR", "Scores": "CORRECT ANSWERS (OUT OF 15)"}),
+        use_container_width=True
+    )
+    
+    # Optional reset mechanism shortcut 
+    if st.session_state.quiz_submitted:
+        if st.button("🔄 Try Again With New Questions"):
+            st.session_state.quiz_questions = random.sample(QUIZ_POOL, 15)
+            st.session_state.quiz_user_answers = {}
+            st.session_state.quiz_submitted = False
+            st.session_state.quiz_active = False
+            st.rerun()
 
 st.write("---")
 st.markdown("## ⚽ Proceed to 2026 Tournament Operations Matrix")
@@ -330,7 +393,7 @@ def render_professional_card(match_id, data):
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; min-height: 28px;">
             <span style="font-size: 14px; font-weight: { '700; color: #1e293b;' if data['winner'] == data['t1'] else '500; color: #64748b;' }">
-                { '🥇 ' if data['winner'] == data['t1'] else '' }{normalize_string(data['t1'])}
+                🥇 {normalize_string(data['t1'])}
             </span>
             <span style="font-size: 16px; font-family: monospace; font-weight: 700; background-color: #f8fafc; padding: 2px 8px; border-radius: 4px;">
                 { '-' if is_scheduled else data['s1'] }
@@ -338,7 +401,7 @@ def render_professional_card(match_id, data):
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; min-height: 28px; margin-top: 4px;">
             <span style="font-size: 14px; font-weight: { '700; color: #1e293b;' if data['winner'] == data['t2'] else '500; color: #64748b;' }">
-                { '🥇 ' if data['winner'] == data['t2'] else '' }{normalize_string(data['t2'])}
+                🥇 {normalize_string(data['t2'])}
             </span>
             <span style="font-size: 16px; font-family: monospace; font-weight: 700; background-color: #f8fafc; padding: 2px 8px; border-radius: 4px;">
                 { '-' if is_scheduled else data['s2'] }
